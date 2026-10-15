@@ -1,0 +1,23 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>probe</title></head><body>
+<h1>PROBE_PAGE_LOADED</h1>
+<script>
+function report(tag, data){
+  try{
+    var msg = tag + "=" + encodeURIComponent(typeof data==="string"?data:JSON.stringify(data));
+    navigator.sendBeacon("http://127.0.0.1:8080/log?"+msg);
+    var x=new XMLHttpRequest(); x.open("GET","http://127.0.0.1:8080/log?"+msg,true); x.send();
+  }catch(e){ var x2=new XMLHttpRequest(); x2.open("GET","http://127.0.0.1:8080/log?reporterr="+encodeURIComponent(String(e)),true); x2.send(); }
+}
+report("ua", navigator.userAgent);
+report("has_heytapCall", typeof window.heytapCall);
+report("has_HeytapNativeApi", typeof window.HeytapNativeApi);
+report("has_android", typeof window.android);
+report("has_HeytapJsApi", typeof window.HeytapJsApi);
+try{ if(typeof window.android!=="undefined" && window.android.getPlatformToken){ report("getPlatformToken", window.android.getPlatformToken()); } }catch(e){ report("token_err", String(e)); }
+try{ if(typeof window.android!=="undefined" && window.android.getUserInfo){ report("getUserInfo", window.android.getUserInfo()); } }catch(e){ report("userinfo_err", String(e)); }
+try{ if(window.HeytapNativeApi && window.HeytapNativeApi.invoke){ window.HeytapNativeApi.invoke("vip.getClientContext","{}","cb_probe");
+  window.HeytapJsApi = window.HeytapJsApi || {}; var old=window.HeytapJsApi.callback;
+  window.HeytapJsApi.callback=function(id,res){ report("jsapi_cb_"+id, res); if(old)old(id,res); };
+} }catch(e){ report("invoke_err", String(e)); }
+setTimeout(function(){ report("alive","1"); }, 2500);
+</script></body></html>
